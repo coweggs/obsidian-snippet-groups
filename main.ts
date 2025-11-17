@@ -221,15 +221,21 @@ export default class MyPlugin extends Plugin {
 
             // drag n drop
             //#region
+            let dragCounter = 0;
+            groupElement.ondragenter = (e) => {
+                dragCounter++;
+                groupElement.classList.add("is-being-dragged-over");
+            }
             groupElement.ondragover = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                groupElement.classList.add("is-being-dragged-over");
             }
             groupElement.ondragleave = (e) => {
-                groupElement.classList.remove("is-being-dragged-over");
+                dragCounter--;
+                if (dragCounter == 0) groupElement.classList.remove("is-being-dragged-over");
             }
             groupElement.ondrop = (e) => {
+                dragCounter = 0;
                 e.stopPropagation();
                 groupElement.classList.remove("is-being-dragged-over");
                 const snippet = snippets[parseInt(e.dataTransfer?.getData("text/plain") ?? "-1")];
@@ -433,8 +439,8 @@ export default class MyPlugin extends Plugin {
         const groupElement = document.createElement("div");
         groupElement.className = "setting-item  nav-folder";
         groupElement.innerHTML = `
-        <div class="setting-item-info" style="pointer-events: none;">
-            <div class="nav-file-title" style="display: inline-flex; padding-left: 0px; width: 100%; pointer-events: auto;">
+        <div class="setting-item-info">
+            <div class="nav-file-title" style="display: inline-flex; padding-left: 0px; width: 100%;">
                 <div class="collapse-icon is-collapsed" style="max-width: fit-content; margin-right: 10px">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon right-triangle">
                         <path d="M3 8L12 17L21 8"></path>
@@ -442,11 +448,17 @@ export default class MyPlugin extends Plugin {
                 </div>
                 <div class="setting-item-name" style="max-width: fit-content;">${group.name}</div>
             </div>
-            <div style="padding-left: 3em; overflow: hidden; height: 0; display: none;
+            <div style="padding-left: 3em; overflow: hidden; height: 0; display: none; margin-left: 4.5px;
                         transition: height var(--anim-duration-moderate) var(--anim-motion-smooth);"
                         class="tree-item-children">
             </div>
-        </div>`;
+        </div>
+        <style>
+.setting-item-info > .tree-item-children > div {
+    padding-top: 0.75em;
+    padding-bottom: 0.75em;
+}
+        </style>`;
 
         groupElement.querySelector(".nav-file-title")?.addEventListener("click", HandleGroupClick.bind(this));
         if (group.collapsed == false) this.RedrawGroupSize(groupElement, false);

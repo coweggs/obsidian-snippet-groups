@@ -24,8 +24,9 @@ export default class MyPlugin extends Plugin {
 
 	async onload() {
 		await this.loadSettings();
-        
-        this.watchAppearanceButton();
+
+        new Notice("Snippet Groups loaded!");
+
         this.initModalObserver();
         this.initNoticeObserver();
 	}
@@ -48,6 +49,10 @@ export default class MyPlugin extends Plugin {
     //#region Observers
     initModalObserver()
     {
+        if (document.querySelector(".mod-settings"))
+        {
+            this.watchAppearanceButton();
+        }
         if (this.settingsObserver) this.settingsObserver.disconnect();
         this.settingsObserver = new MutationObserver((mutations, obs) => {
             for (let mutation of mutations)
@@ -56,6 +61,8 @@ export default class MyPlugin extends Plugin {
                 {
                     if (node instanceof HTMLElement && node.querySelector(".mod-settings"))
                     {
+                        this.watchAppearanceButton();
+                        
                         let appearanceMenu = Array.from(document.querySelectorAll(".vertical-tab-nav-item"))
                                                         .find(e => e.textContent == "Appearance");
                         if (appearanceMenu)
@@ -75,9 +82,12 @@ export default class MyPlugin extends Plugin {
                                       .find(e => e.textContent == "Appearance") as HTMLElement;
         if (AppearanceButton)
         {
-            this.registerDomEvent(AppearanceButton, "click", () => {
-                this.RedrawAppearanceMenu();
-            })
+            if (!AppearanceButton.onclick)
+            {
+                this.registerDomEvent(AppearanceButton, "click", () => {
+                    this.RedrawAppearanceMenu();
+                })
+            }
         }
     }
 

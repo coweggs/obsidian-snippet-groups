@@ -1,0 +1,10 @@
+{
+	"id": "snippet-groups",
+	"name": "Snippet Groups",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "Organise your css snippets into groups, right in your appearance menu!",
+	"author": "coweggs",
+	"authorUrl": "https://github.com/coweggs",
+	"isDesktopOnly": false
+}

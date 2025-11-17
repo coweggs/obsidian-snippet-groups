@@ -110,10 +110,11 @@ export default class MyPlugin extends Plugin {
 
         // Plugin Buttons
         const HeaderControls = Header?.querySelector(".setting-item-control");
+        let ManageGroupsBtn: HTMLDivElement | null;
         let ReloadSnippetsBtn = HeaderControls?.querySelector("[aria-label=\"Reload snippets\"]");
         if (HeaderControls)
         {
-            const ManageGroupsBtn = document.createElement("div");
+            ManageGroupsBtn = document.createElement("div");
             ManageGroupsBtn.className = "clickable-icon extra-setting-button";
             ManageGroupsBtn.ariaLabel = "Manage Snippet Groups";
             ManageGroupsBtn.innerHTML = `
@@ -128,6 +129,7 @@ export default class MyPlugin extends Plugin {
             ManageGroupsBtn.style.maxWidth = (HeaderControls.childNodes[0] as HTMLElement).style.width;
             ManageGroupsBtn.style.maxHeight = (HeaderControls.childNodes[0] as HTMLElement).style.height;
             HeaderControls.insertBefore(ManageGroupsBtn, HeaderControls.childNodes[0]);
+
             ManageGroupsBtn.addEventListener("click", () => {
                 new ManageGroupsModal(this.app, this, () => {
                     // this.RefreshSnippets(snippets, groups, MenuContents);
@@ -159,6 +161,33 @@ export default class MyPlugin extends Plugin {
             const groupElement = await this.NewGroupElement(group);
             Header?.parentElement?.append(groupElement);
             groups.push(groupElement);
+
+            // context menu
+            groupElement.oncontextmenu = (e) => {
+                new Menu()
+                    .addItem(item => item
+                        .setTitle("Rename Group")
+                        .onClick(() => {
+                            if (ManageGroupsBtn)
+                            {
+                                /* Separate from managegroupsbtn.click(), since we need
+                                   to preselect the group. */
+                                new ManageGroupsModal(this.app, this, () => {
+                                    (ReloadSnippetsBtn as HTMLElement).click();
+                                }, group).open();
+                            }
+                        })
+                    )
+                    .addItem(item => item
+                        .setTitle("Delete Group")
+                        .onClick(() => {
+                            this.settings.snippetGroups.remove(group);
+                            this.saveSettings();
+                            (ReloadSnippetsBtn as HTMLElement).click();
+                        })
+                    )
+                    .showAtMouseEvent(e)
+            }
 
             // drag n drop
             //#region
@@ -457,29 +486,31 @@ export default class MyPlugin extends Plugin {
 
 class ManageGroupsModal extends Modal {
     plugin: MyPlugin
+    PreselectedGroup: SnippetGroup | undefined
 
-    constructor(app: App, plugin: MyPlugin, closeCallback : () => void) {
+    constructor(app: App, plugin: MyPlugin, closeCallback : () => void, preselectedGroup? : SnippetGroup) {
         super(app);
-        this.setTitle("Manage Snippet Groups");
         this.plugin = plugin;
+        this.PreselectedGroup = preselectedGroup;
+        this.setTitle("Manage Snippet Groups");
         this.setCloseCallback(closeCallback)
     }
 
     onOpen() {
         this.contentEl.empty();
-
-        console.log(this.plugin.settings.snippetGroups);
         this.plugin.settings.snippetGroups.forEach((group, i) => {
+            let nameEntry: HTMLInputElement | undefined;
             new Setting(this.contentEl)
                 .setName((i + 1).toString())
-                .addText(text => text
-                    .setValue(group.name)
-                    .setPlaceholder("Name")
-                    .onChange(value => {
-                        group.name = value;
-                        this.plugin.saveSettings();
-                    })
-                )
+                .addText(text => {
+                    text.setValue(group.name)
+                        .setPlaceholder("Name")
+                        .onChange(value => {
+                            group.name = value;
+                            this.plugin.saveSettings();
+                        })
+                    nameEntry = text.inputEl;
+                })
                 .addButton(button => button
                     .setIcon("arrow-up")
                     .onClick(() => {
@@ -511,6 +542,12 @@ class ManageGroupsModal extends Modal {
                         this.onOpen();
                     })
                 );
+            if (group == this.PreselectedGroup && nameEntry)
+            {
+                requestAnimationFrame(() => {
+                    (nameEntry as HTMLInputElement).focus();
+                })
+            }
         });
 
         new Setting(this.contentEl)

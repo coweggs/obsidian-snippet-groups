@@ -49,9 +49,14 @@ export default class MyPlugin extends Plugin {
     //#region Observers
     initModalObserver()
     {
+        let watchingAppearance = false;
         if (document.querySelector(".mod-settings"))
         {
-            this.watchAppearanceButton();
+            if (!watchingAppearance)
+            {
+                this.watchAppearanceButton();
+                watchingAppearance = true;
+            }
         }
         if (this.settingsObserver) this.settingsObserver.disconnect();
         this.settingsObserver = new MutationObserver((mutations, obs) => {
@@ -61,7 +66,11 @@ export default class MyPlugin extends Plugin {
                 {
                     if (node instanceof HTMLElement && node.querySelector(".mod-settings"))
                     {
-                        this.watchAppearanceButton();
+                        if (!watchingAppearance)
+                        {
+                            this.watchAppearanceButton();
+                            watchingAppearance = true;
+                        }
                         
                         let appearanceMenu = Array.from(document.querySelectorAll(".vertical-tab-nav-item"))
                                                         .find(e => e.textContent == "Appearance");

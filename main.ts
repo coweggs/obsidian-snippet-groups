@@ -1,4 +1,5 @@
 import { App, Modal, Notice, Plugin, Menu, Setting } from 'obsidian';
+import { title } from 'process';
 
 interface SnippetGroup {
     name: string;
@@ -146,8 +147,8 @@ export default class MyPlugin extends Plugin {
             }
         }
 
-        const groups : HTMLElement[] = [];
-        const snippets : HTMLElement[] = [];
+        const groups: HTMLElement[] = [];
+        const snippets: HTMLElement[] = [];
         
         // collect snippets
         let _s = Header?.nextElementSibling;
@@ -180,10 +181,14 @@ export default class MyPlugin extends Plugin {
                     )
                     .addItem(item => item
                         .setTitle("Delete Group")
+                        .setWarning(true)
                         .onClick(() => {
-                            this.settings.snippetGroups.remove(group);
-                            this.saveSettings();
-                            (ReloadSnippetsBtn as HTMLElement).click();
+                            new ConfirmationModal(this.app, `Are you sure you want to delete "${group.name}"?`, () => {
+                                // confirmation callback
+                                this.settings.snippetGroups.remove(group);
+                                this.saveSettings();
+                                (ReloadSnippetsBtn as HTMLElement).click();
+                            }).open()
                         })
                     )
                     .showAtMouseEvent(e)
@@ -351,7 +356,7 @@ export default class MyPlugin extends Plugin {
         }
     }
 
-    RefreshSnippets(snippets : HTMLElement[], groups : HTMLElement[], MenuContents : HTMLElement)
+    RefreshSnippets(snippets: HTMLElement[], groups: HTMLElement[], MenuContents: HTMLElement)
     {
         for (const snippet of snippets)
         {
@@ -375,7 +380,7 @@ export default class MyPlugin extends Plugin {
         }
     }
 
-    RefreshGroups(groups : HTMLElement[], skipAnimation? : boolean)
+    RefreshGroups(groups: HTMLElement[], skipAnimation?: boolean)
     {
         groups.forEach(groupElement => {
             let group = this.settings.snippetGroups.find(g => g.name == groupElement.querySelector(".setting-item-name")?.textContent);
@@ -391,7 +396,7 @@ export default class MyPlugin extends Plugin {
         })
     }
 
-    NewGroupElement(group : SnippetGroup)
+    NewGroupElement(group: SnippetGroup)
     {
         const groupElement = document.createElement("div");
         groupElement.className = "setting-item  nav-folder";
@@ -424,7 +429,7 @@ export default class MyPlugin extends Plugin {
         return groupElement;
     }
 
-    RedrawGroupSize(groupElement : HTMLElement, shouldDrawCollapsed? : boolean, skipAnimation? : boolean)
+    RedrawGroupSize(groupElement: HTMLElement, shouldDrawCollapsed?: boolean, skipAnimation?: boolean)
     {
         let container = groupElement.querySelector(".tree-item-children") as HTMLElement;
         let collapseIcon = groupElement.querySelector(".collapse-icon") as HTMLElement;
@@ -488,7 +493,7 @@ class ManageGroupsModal extends Modal {
     plugin: MyPlugin
     PreselectedGroup: SnippetGroup | undefined
 
-    constructor(app: App, plugin: MyPlugin, closeCallback : () => void, preselectedGroup? : SnippetGroup) {
+    constructor(app: App, plugin: MyPlugin, closeCallback: () => void, preselectedGroup?: SnippetGroup) {
         super(app);
         this.plugin = plugin;
         this.PreselectedGroup = preselectedGroup;
@@ -537,9 +542,12 @@ class ManageGroupsModal extends Modal {
                     .setIcon("delete")
                     .setWarning()
                     .onClick(() => {
-                        this.plugin.settings.snippetGroups.remove(group);
-                        this.plugin.saveSettings();
-                        this.onOpen();
+                        new ConfirmationModal(this.app, `Are you sure you want to delete "${group.name}"?`, () => {
+                            // confirmation callback
+                            this.plugin.settings.snippetGroups.remove(group);
+                            this.plugin.saveSettings();
+                            this.onOpen();
+                        }).open()
                     })
                 );
             if (group == this.PreselectedGroup && nameEntry)
@@ -565,5 +573,33 @@ class ManageGroupsModal extends Modal {
                     this.onOpen();
                 })
             );
+    }
+}
+
+class ConfirmationModal extends Modal {
+    submitCallback: () => void;
+
+    constructor(app: App, title: string, submitCallback: () => void) {
+        super(app);
+        this.setTitle(title);
+        this.submitCallback = submitCallback;
+    }
+
+    onOpen() {
+        new Setting(this.contentEl)
+            .addButton(button => button
+                .setButtonText("No")
+                .onClick(() => {
+                    this.close();
+                })
+            )
+            .addButton(button => button
+                .setButtonText("Yes")
+                .setWarning()
+                .onClick(() => {
+                    this.submitCallback();
+                    this.close();
+                })
+            )
     }
 }

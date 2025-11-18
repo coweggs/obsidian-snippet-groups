@@ -17,15 +17,13 @@ const DEFAULT_SETTINGS: Settings = {
 }
 //#endregion
 
-export default class MyPlugin extends Plugin {
+export default class UserModGroups extends Plugin {
 	settings: Settings;
     observer: MutationObserver;
     settingsObserver: MutationObserver
 
 	async onload() {
 		await this.loadSettings();
-
-        new Notice("Snippet Groups loaded!");
 
         this.initModalObserver();
         this.initNoticeObserver();
@@ -59,10 +57,10 @@ export default class MyPlugin extends Plugin {
             }
         }
         if (this.settingsObserver) this.settingsObserver.disconnect();
-        this.settingsObserver = new MutationObserver((mutations, obs) => {
-            for (let mutation of mutations)
+        this.settingsObserver = new MutationObserver(async (mutations, obs) => {
+            for (const mutation of mutations)
             {
-                for (let node of Array.from(mutation.addedNodes))
+                for (const node of Array.from(mutation.addedNodes))
                 {
                     if (node instanceof HTMLElement && node.querySelector(".mod-settings"))
                     {
@@ -72,11 +70,11 @@ export default class MyPlugin extends Plugin {
                             watchingAppearance = true;
                         }
                         
-                        let appearanceMenu = Array.from(document.querySelectorAll(".vertical-tab-nav-item"))
+                        const appearanceMenu = Array.from(document.querySelectorAll(".vertical-tab-nav-item"))
                                                         .find(e => e.textContent == "Appearance");
                         if (appearanceMenu)
                         {
-                            this.RedrawAppearanceMenu();
+                            await this.RedrawAppearanceMenu();
                         }
                     }
                 }
@@ -93,8 +91,8 @@ export default class MyPlugin extends Plugin {
         {
             if (!AppearanceButton.onclick)
             {
-                this.registerDomEvent(AppearanceButton, "click", () => {
-                    this.RedrawAppearanceMenu();
+                this.registerDomEvent(AppearanceButton, "click", async () => {
+                    await this.RedrawAppearanceMenu();
                 })
             }
         }
@@ -103,18 +101,18 @@ export default class MyPlugin extends Plugin {
     initNoticeObserver()
     {
         if (this.observer) this.observer.disconnect();
-        this.observer = new MutationObserver((mutations, obs) => {
-            outer: for (let mutation of mutations)
+        this.observer = new MutationObserver(async (mutations, obs) => {
+            outer: for (const mutation of mutations)
             {
-                for (let node of Array.from(mutation.addedNodes))
+                for (const node of Array.from(mutation.addedNodes))
                 {
                     if (node instanceof HTMLElement && node.querySelector(".notice-message"))
                     {
                         if (node.querySelector(".notice-message")?.textContent == "Reloaded CSS snippets.")
                         {
-                            let appearanceMenuClosed = Array.from(document.querySelectorAll(".vertical-tab-nav-item"))
+                            const appearanceMenuClosed = Array.from(document.querySelectorAll(".vertical-tab-nav-item"))
                                                             .find(e => e.textContent == "Appearance") == null;
-                            if (!appearanceMenuClosed) this.RedrawAppearanceMenu();
+                            if (!appearanceMenuClosed) await this.RedrawAppearanceMenu();
                             this.observer.disconnect();
                             break outer;
                         }
@@ -126,7 +124,7 @@ export default class MyPlugin extends Plugin {
     //#endregion
 
     //#region DOM Helper Functions
-    async RedrawAppearanceMenu()
+    RedrawAppearanceMenu()
     {
         const Header = Array.from(document.querySelectorAll(".setting-item.setting-item-heading"))
                             .find(e => e.querySelector(".setting-item-name")?.textContent == "CSS snippets");
@@ -137,12 +135,12 @@ export default class MyPlugin extends Plugin {
         // Plugin Buttons
         const HeaderControls = Header?.querySelector(".setting-item-control");
         let ManageGroupsBtn: HTMLDivElement | null;
-        let ReloadSnippetsBtn = HeaderControls?.querySelector("[aria-label=\"Reload snippets\"]");
+        const ReloadSnippetsBtn = HeaderControls?.querySelector("[aria-label=\"Reload snippets\"]");
         if (HeaderControls)
         {
             ManageGroupsBtn = document.createElement("div");
             ManageGroupsBtn.className = "clickable-icon extra-setting-button";
-            ManageGroupsBtn.ariaLabel = "Manage Snippet Groups";
+            ManageGroupsBtn.ariaLabel = "Manage snippet groups";
             ManageGroupsBtn.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" style="width: var(--icon-size); height: var(--icon-size);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-group-icon lucide-group">
                 <path d="M12 5.56006H22" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -184,7 +182,7 @@ export default class MyPlugin extends Plugin {
         }
 
         for (const group of this.settings.snippetGroups) {
-            const groupElement = await this.NewGroupElement(group);
+            const groupElement = this.NewGroupElement(group);
             Header?.parentElement?.append(groupElement);
             groups.push(groupElement);
 
@@ -192,7 +190,7 @@ export default class MyPlugin extends Plugin {
             groupElement.oncontextmenu = (e) => {
                 new Menu()
                     .addItem(item => item
-                        .setTitle("Rename Group")
+                        .setTitle("Rename group")
                         .onClick(() => {
                             if (ManageGroupsBtn)
                             {
@@ -205,13 +203,13 @@ export default class MyPlugin extends Plugin {
                         })
                     )
                     .addItem(item => item
-                        .setTitle("Delete Group")
+                        .setTitle("Delete group")
                         .setWarning(true)
                         .onClick(() => {
-                            new ConfirmationModal(this.app, `Are you sure you want to delete "${group.name}"?`, () => {
+                            new ConfirmationModal(this.app, `Are you sure you want to delete "${group.name}"?`, async () => {
                                 // confirmation callback
                                 this.settings.snippetGroups.remove(group);
-                                this.saveSettings();
+                                await this.saveSettings();
                                 (ReloadSnippetsBtn as HTMLElement).click();
                             }).open()
                         })
@@ -234,29 +232,29 @@ export default class MyPlugin extends Plugin {
                 dragCounter--;
                 if (dragCounter == 0) groupElement.classList.remove("is-being-dragged-over");
             }
-            groupElement.ondrop = (e) => {
+            groupElement.ondrop = async (e) => {
                 dragCounter = 0;
                 e.stopPropagation();
                 groupElement.classList.remove("is-being-dragged-over");
                 const snippet = snippets[parseInt(e.dataTransfer?.getData("text/plain") ?? "-1")];
-                let arrivingSnippetName = snippet.querySelector(".setting-item-name")?.textContent;
+                const arrivingSnippetName = snippet.querySelector(".setting-item-name")?.textContent;
                 if (snippet && arrivingSnippetName && snippet.parentElement)
                 {
                     // is it already in another group?
                     if (snippet.parentElement.className == "tree-item-children"
                         && snippet.parentElement.parentElement?.parentElement)
                     {
-                        let fromGroup = groups.indexOf(snippet.parentElement.parentElement?.parentElement);
+                        const fromGroup = groups.indexOf(snippet.parentElement.parentElement?.parentElement);
                         if (fromGroup != -1)
                         {
                             this.settings.snippetGroups[fromGroup].snippets.remove(arrivingSnippetName);
                             group.snippets.push(arrivingSnippetName);
-                            this.saveSettings();
+                            await this.saveSettings();
                         }
                     }
                     groupElement.querySelector(".tree-item-children")?.appendChild(snippet);
                     group.snippets.push(arrivingSnippetName);
-                    this.saveSettings();
+                    await this.saveSettings();
                 }
                 this.RefreshSnippets(snippets, groups, MenuContents);
                 this.RefreshGroups(groups);
@@ -266,8 +264,6 @@ export default class MyPlugin extends Plugin {
 
         for (const snippet of snippets)
         {
-            snippet.style.pointerEvents = "auto";
-
             // move groups context menu
             snippet.oncontextmenu = (e) => {
                 e.stopPropagation();
@@ -276,7 +272,7 @@ export default class MyPlugin extends Plugin {
                         .setTitle("Move snippet to...")
                         .setIcon("send-to-back")
                         .onClick((e) => {
-                            let snippetsMenu = new Menu();
+                            const snippetsMenu = new Menu();
                             snippetsMenu.addItem(item => item
                                 .setTitle("None")
                                 .onClick(() => {
@@ -296,7 +292,7 @@ export default class MyPlugin extends Plugin {
                                 })
                             )
                             snippetsMenu.addItem(item => item
-                                .setTitle("New Group")
+                                .setTitle("New group")
                                 .onClick(() => {
                                     ManageGroupsBtn?.click();
                                 })
@@ -346,21 +342,21 @@ export default class MyPlugin extends Plugin {
         MenuContents.ondragleave = (e) => {
             MenuContents.classList.remove("is-being-dragged-over");
         }
-        MenuContents.ondrop = (e) => {
+        MenuContents.ondrop = async (e) => {
             MenuContents.classList.remove("is-being-dragged-over");
             const snippet = snippets[parseInt(e.dataTransfer?.getData("text/plain") ?? "-1")];
-            let arrivingSnippetName = snippet.querySelector(".setting-item-name")?.textContent;
+            const arrivingSnippetName = snippet.querySelector(".setting-item-name")?.textContent;
             if (snippet && arrivingSnippetName && snippet.parentElement)
             {
                 // is it already in another group?
                 if (snippet.parentElement.className == "tree-item-children"
                     && snippet.parentElement.parentElement?.parentElement)
                 {
-                    let fromGroup = groups.indexOf(snippet.parentElement.parentElement?.parentElement);
+                    const fromGroup = groups.indexOf(snippet.parentElement.parentElement?.parentElement);
                     if (fromGroup != -1)
                     {
                         this.settings.snippetGroups[fromGroup].snippets.remove(arrivingSnippetName);
-                        this.saveSettings();
+                        await this.saveSettings();
                     }
                 }
 
@@ -371,7 +367,7 @@ export default class MyPlugin extends Plugin {
         }
         //#endregion
 
-        let scrollHeight = MenuContents?.scrollHeight ?? null;
+        const scrollHeight = MenuContents?.scrollHeight ?? null;
 
         this.RefreshSnippets(snippets, groups, MenuContents);
         this.RefreshGroups(groups, true);
@@ -422,11 +418,11 @@ export default class MyPlugin extends Plugin {
     {
         groups.forEach(groupElement => {
             // resize
-            let name = groupElement.querySelector(".setting-item-name");
-            let group = this.settings.snippetGroups.find(g => g.name == name?.textContent);
+            const name = groupElement.querySelector(".setting-item-name");
+            const group = this.settings.snippetGroups.find(g => g.name == name?.textContent);
             if (group)
             {
-                let collapsed = this.RedrawGroupSize(groupElement, group.collapsed, skipAnimation);
+                const collapsed = this.RedrawGroupSize(groupElement, group.collapsed, skipAnimation);
                 group.collapsed = collapsed;
             }
             else
@@ -445,27 +441,52 @@ export default class MyPlugin extends Plugin {
     {
         const groupElement = document.createElement("div");
         groupElement.className = "setting-item  nav-folder";
-        groupElement.innerHTML = `
-        <div class="setting-item-info">
-            <div class="nav-file-title" style="display: inline-flex; padding-left: 0px; width: 100%;">
-                <div class="collapse-icon is-collapsed" style="max-width: fit-content; margin-right: 10px">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon right-triangle">
-                        <path d="M3 8L12 17L21 8"></path>
-                    </svg>
-                </div>
-                <div class="setting-item-name" style="max-width: fit-content;">${group.name}</div>
-            </div>
-            <div style="padding-left: 3em; overflow: hidden; height: 0; display: none; margin-left: 4.5px;
-                        transition: height var(--anim-duration-moderate) var(--anim-motion-smooth);"
-                        class="tree-item-children">
-            </div>
-        </div>
-        <style>
-.setting-item-info > .tree-item-children > div {
-    padding-top: 0.75em;
-    padding-bottom: 0.75em;
-}
-        </style>`;
+
+        const infoDiv = groupElement.createEl("div", { cls: "setting-item-info" });
+
+        const titleDiv = infoDiv.createEl("div", { cls: "nav-file-title" });
+
+        titleDiv.setAttr("style", "display: inline-flex; padding-left: 0px; width: 100%;");
+
+        const collapseDiv = titleDiv.createEl("div", { cls: "collapse-icon is-collapsed" });
+        collapseDiv.setAttr("style", "max-width: fit-content; margin-right: 10px");
+
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("class", "svg-icon right-triangle");
+        collapseDiv.appendChild(svg);
+        svg.setAttrs({
+            xmlns: "http://www.w3.org/2000/svg",
+            width: "24",
+            height: "24",
+            viewBox: "0 0 24 24",
+            fill: "none",
+            stroke: "currentColor",
+            "stroke-width": "2",
+            "stroke-linecap": "round",
+            "stroke-linejoin": "round"
+        });
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", "M3 8L12 17L21 8");
+        svg.appendChild(path);
+
+        const nameDiv = titleDiv.createEl("div", { cls: "setting-item-name" });
+        nameDiv.setAttr("style", "max-width: fit-content;");
+        nameDiv.setText(group.name);
+
+        // Tree children container
+        const childrenDiv = infoDiv.createEl("div", { cls: "tree-item-children" });
+        childrenDiv.setAttr(
+            "style",
+            "padding-left: 3em; overflow: hidden; height: 0; display: none; margin-left: 4.5px; transition: height var(--anim-duration-moderate) var(--anim-motion-smooth);"
+        );
+
+        const style = document.createElement("style");
+        style.textContent = `
+        .setting-item-info > .tree-item-children > div {
+            padding-top: 0.75em;
+            padding-bottom: 0.75em;
+        }`;
+        document.head.appendChild(style);
 
         groupElement.querySelector(".nav-file-title")?.addEventListener("click", HandleGroupClick.bind(this));
         if (group.collapsed == false) this.RedrawGroupSize(groupElement, false);
@@ -482,9 +503,9 @@ export default class MyPlugin extends Plugin {
 
     RedrawGroupSize(groupElement: HTMLElement, shouldDrawCollapsed?: boolean, skipAnimation?: boolean)
     {
-        let container = groupElement.querySelector(".tree-item-children") as HTMLElement;
-        let collapseIcon = groupElement.querySelector(".collapse-icon") as HTMLElement;
-        let empty = container.childElementCount <= 0;
+        const container = groupElement.querySelector(".tree-item-children") as HTMLElement;
+        const collapseIcon = groupElement.querySelector(".collapse-icon") as HTMLElement;
+        const empty = container.childElementCount <= 0;
 
         if (shouldDrawCollapsed == null) shouldDrawCollapsed = container.style.height == "0px";
         if (empty) shouldDrawCollapsed = true;
@@ -498,13 +519,13 @@ export default class MyPlugin extends Plugin {
         } 
         else
         {
-            let svg = collapseIcon.querySelector("svg");
-            let currentHeight = container.offsetHeight;
+            const svg = collapseIcon.querySelector("svg");
+            const currentHeight = container.offsetHeight;
             container.style.height = "auto"
             // Directly setting auto doesnt animate, so we need to find its height
             // then set it back to normal, and then set the height in pixels.
             requestAnimationFrame(() => {
-                let fitHeight = container.scrollHeight;
+                const fitHeight = container.scrollHeight;
                 container.style.height = currentHeight + "px";
                 collapseIcon.classList.remove("is-collapsed");
                 if (skipAnimation)
@@ -543,14 +564,14 @@ export default class MyPlugin extends Plugin {
 
 //#region Modals
 class ManageGroupsModal extends Modal {
-    plugin: MyPlugin
+    plugin: UserModGroups
     PreselectedGroup: SnippetGroup | undefined
 
-    constructor(app: App, plugin: MyPlugin, closeCallback: () => void, preselectedGroup?: SnippetGroup) {
+    constructor(app: App, plugin: UserModGroups, closeCallback: () => void, preselectedGroup?: SnippetGroup) {
         super(app);
         this.plugin = plugin;
         this.PreselectedGroup = preselectedGroup;
-        this.setTitle("Manage Snippet Groups");
+        this.setTitle("Manage snippet groups");
         this.setCloseCallback(closeCallback)
     }
 
@@ -563,31 +584,31 @@ class ManageGroupsModal extends Modal {
                 .addText(text => {
                     text.setValue(group.name)
                         .setPlaceholder("Name")
-                        .onChange(value => {
+                        .onChange(async value => {
                             group.name = value;
-                            this.plugin.saveSettings();
+                            await this.plugin.saveSettings();
                         })
                     nameEntry = text.inputEl;
                 })
                 .addButton(button => button
                     .setIcon("arrow-up")
-                    .onClick(() => {
-                        let arr = this.plugin.settings.snippetGroups;
+                    .onClick(async () => {
+                        const arr = this.plugin.settings.snippetGroups;
                         if (i > 0) {
                             [arr[i - 1], arr[i]] = [arr[i], arr[i - 1]];
                         }
-                        this.plugin.saveSettings();
+                        await this.plugin.saveSettings();
                         this.onOpen();
                     })
                 )
                 .addButton(button => button
                     .setIcon("arrow-down")
-                    .onClick(() => {
-                        let arr = this.plugin.settings.snippetGroups;
+                    .onClick(async () => {
+                        const arr = this.plugin.settings.snippetGroups;
                         if (i < arr.length - 1) {
                             [arr[i], arr[i + 1]] = [arr[i + 1], arr[i]];
                         }
-                        this.plugin.saveSettings();
+                        await this.plugin.saveSettings();
                         this.onOpen();
                     })
                 )
@@ -595,10 +616,10 @@ class ManageGroupsModal extends Modal {
                     .setIcon("delete")
                     .setWarning()
                     .onClick(() => {
-                        new ConfirmationModal(this.app, `Are you sure you want to delete "${group.name}"?`, () => {
+                        new ConfirmationModal(this.app, `Are you sure you want to delete "${group.name}"?`, async () => {
                             // confirmation callback
                             this.plugin.settings.snippetGroups.remove(group);
-                            this.plugin.saveSettings();
+                            await this.plugin.saveSettings();
                             this.onOpen();
                         }).open()
                     })
@@ -613,16 +634,16 @@ class ManageGroupsModal extends Modal {
 
         new Setting(this.contentEl)
             .addButton(btn => btn
-                .setButtonText("Add Group")
+                .setButtonText("Add group")
                 .setCta()
-                .onClick(() => {
+                .onClick(async () => {
                     this.plugin.settings.snippetGroups.push({
                         name: "New Group",
                         snippets: [],
                         collapsed: true,
                         order: this.plugin.settings.snippetGroups.length
                     });
-                    this.plugin.saveSettings();
+                    await this.plugin.saveSettings();
                     this.onOpen();
                 })
             );

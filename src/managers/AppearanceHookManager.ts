@@ -70,16 +70,17 @@ export class AppearanceHookManager {
     
         // Search Snippets
         const SearchEl = SearchManager.CreateSearchElement(MenuContents, (input: string) => {
+            const searchBarOffsetTop = SearchEl.offsetTop; // jump to search results (instead of searchbar at bottom)
+            MenuContents.scrollTop = Math.max(searchBarOffsetTop - 100, MenuContents.scrollTop); 
             const groupsWithResults = SearchManager.FilterSnippetsByInput(snippets, input);
             if (!input || input.trim() == "")
                 this.RefreshGroups(_plugin, groups, true);
             else
                 this.OpenGroups(_plugin, groups, groupsWithResults, true);
         });
-        if (Header)
-        {
-            MenuContents.insertBefore(SearchEl, Header);
-        }
+        if (Header) MenuContents.insertBefore(SearchEl, Header);
+        SearchEl.querySelector("input")?.focus();
+        MenuContents.scrollTop = 0; // focus but stay at top
     
         //-------------------------- Actual Snippets Management --------------------------//        
         // collect snippets
@@ -348,6 +349,9 @@ export class AppearanceHookManager {
         })
     }
 
+    /*
+     * For searchbar: opens all groups within toOpen, and hides all other ones (display: none)
+     */
     static OpenGroups(_plugin: SnippetGroupsPlugin, groups: HTMLElement[], toOpen: HTMLElement[], skipAnimation?: boolean)
     {
         groups.filter(g => !toOpen.contains(g)).forEach(groupElement => {
@@ -359,12 +363,16 @@ export class AppearanceHookManager {
             this.RedrawGroupSize(groupElement, false, skipAnimation);
             // snippets count on hover
             let childContainer = groupElement.querySelector(".tree-item-children");
-            if (childContainer)
+            if (childContainer && childContainer.parentElement?.querySelector(".setting-item-info"))
             {
-                const count = Array.from(childContainer.children).filter((child: HTMLElement) => {
-                    return child.style.display != "none";
-                }).length;
-                childContainer.ariaLabel = `${count} Snippets`;
+                let nameEl = childContainer.parentElement?.querySelector(".setting-item-info");
+                if (nameEl)
+                {
+                    const count = Array.from(childContainer.children).filter((child: HTMLElement) => {
+                        return child.style.display != "none";
+                    }).length;
+                    nameEl.ariaLabel = `${count} Snippets`;
+                }
             }
         })
     }

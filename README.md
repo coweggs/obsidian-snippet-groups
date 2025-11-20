@@ -1,11 +1,12 @@
 <div align=center>
   <img width="500" height="500" alt="Snippet Groups Logo(1)" src="https://github.com/user-attachments/assets/5bd63119-eeca-45c8-a6f8-92293211adc4" />
   <br>
-  Obsidian Snippet Groups provides tools to let you group your css snippets into categories.
+  Obsidian Snippet Groups provides tools to let you group your css snippets into categories (and a search bar).
 </div>
 
 # Preview
 <img width="1716" height="1025" alt="image" src="https://github.com/user-attachments/assets/f29f6362-8b89-4835-a21d-26410d6bc821" />
+<img width="1237" height="787" alt="image" src="https://github.com/user-attachments/assets/ee18f35a-5212-4e23-9e35-5caf7b47e0e9" />
 
 # How to Use:
 1. Install the plugin (as of now via BRAT, or releases)

@@ -1,5 +1,5 @@
 import { App, Modal, Setting } from "obsidian";
-import { SnippetGroup } from "../Settings";
+import { SnippetGroup } from "types/Settings";
 import { ConfirmationModal } from "./ConfirmationModal"
 import SnippetGroupsPlugin from "main";
 

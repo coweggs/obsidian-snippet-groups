@@ -19,8 +19,7 @@
             "new-group": "New group",
             "moved-notice": "Moved '{{- snippet}}' into '{{- group}}'."
         },
-        "manage-groups-btn": "Manage snippet groups",
-        "snippets-count-aria": "{{- amount}} snippets"
+        "manage-groups-btn": "Manage snippet groups"
     },
     "modals": {
         "manage-snippet-groups": {

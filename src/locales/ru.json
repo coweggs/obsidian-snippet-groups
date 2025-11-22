@@ -1,0 +1,35 @@
+{
+    "ui": {
+        "yes": "Да",
+        "no": "Нет"
+    },
+    "appearance": {
+        "search": {
+            "title": "Поиск фрагментов CSS", 
+            "description": "Фильтровать фрагменты CSS по названию.", 
+            "placeholder": "Поиск фрагментов CSS..."
+        },
+        "group-context-menu": {
+            "rename": "Переименовать группу",
+            "delete": "Удалить группу"
+        },
+        "snippet-context-menu": {
+            "move-to": "Переместить фрагмент CSS в...",
+            "none-group": "Без группы",
+            "new-group": "Новая группа",
+            "moved-notice": "Фрагмент CSS '{{- snippet}}' перемещён в '{{- group}}'."
+        },
+        "manage-groups-btn": "Управление группами фрагментов CSS"
+    },
+    "modals": {
+        "manage-snippet-groups": {
+            "title": "Управление группами фрагментов CSS",
+            "name-placeholder": "Имя",
+            "add-btn": "Добавить группу",
+            "default-group-name": "Новая группа"
+        },
+        "confirmation": {
+            "delete": "Вы уверены, что хотите удалить: {{- snippet}}?"
+        }
+    }
+}

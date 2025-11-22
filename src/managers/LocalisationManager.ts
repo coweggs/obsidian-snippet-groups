@@ -1,4 +1,5 @@
 import en from "locales/en.json";
+import ru from "locales/ru.json";
 
 export class LocalisationManager {
     static i18next: any;
@@ -10,6 +11,7 @@ export class LocalisationManager {
         const namespace = "snippet-groups";
 
         this.i18next.addResourceBundle("en", namespace, en);
+        this.i18next.addResourceBundle("ru", namespace, ru);
     }
 
     static setRef()

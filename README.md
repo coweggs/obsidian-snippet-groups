@@ -17,3 +17,16 @@
 
 # Known Issues:
 - Using [Obsidian Settings Search](https://github.com/javalent/settings-search) with a delay on [Lazy Plugin Loader](https://github.com/alangrainger/obsidian-lazy-plugins) causes settings modal to refresh, removing the plugin's effects. Simply reopnening the appearance tab fixes this.
+
+# Supported Languages:
+| Language | Status |
+| --- | --- |
+| English (en) | ✅ |
+| Русский (ru) | ✅ |
+
+### Want to help translate?
+1. Fork the repo
+2. Navigate to src/locales
+3. Create a file, named `<language_code>.json` (Use [Obsidian's Translation Repo](https://github.com/obsidianmd/obsidian-translations) to find language codes.)
+4. Copy over the format from `en.json`, and edit the values (dont touch `{{- snippet}` or anything similar)
+5. Submit a pull request

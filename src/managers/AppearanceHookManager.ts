@@ -3,6 +3,7 @@ import { SnippetGroup } from "types/Settings";
 import { ManageGroupsModal, ConfirmationModal } from "modals"
 import { SearchManager } from "./SearchManager";
 import SnippetGroupsPlugin from "main";
+import { LocalisationManager } from "./LocalisationManager";
 
 /*
  * Manages DOM/UI related tasks for the appearance menu contents.
@@ -16,8 +17,9 @@ export class AppearanceHookManager {
     {
         const _settings = _plugin.settings;
 
+        const headerName = LocalisationManager.get("setting.appearance.option-css-snippets")
         const Header = Array.from(document.querySelectorAll(".setting-item.setting-item-heading"))
-                            .find(e => e.querySelector(".setting-item-name")?.textContent == "CSS snippets");
+                            .find(e => e.querySelector(".setting-item-name")?.textContent == headerName);
         const MenuContents = Header?.parentElement;
 
         const groups: HTMLElement[] = [];
@@ -30,7 +32,8 @@ export class AppearanceHookManager {
         // Plugin Buttons
         const HeaderControls = Header?.querySelector(".setting-item-control");
         let ManageGroupsBtn: HTMLDivElement | null;
-        const ReloadSnippetsBtn = HeaderControls?.querySelector("[aria-label=\"Reload snippets\"]");
+        const reloadSnippetsBtnAriaText = LocalisationManager.get("setting.appearance.button-reload-snippets");
+        const ReloadSnippetsBtn = HeaderControls?.querySelector(`[aria-label="${reloadSnippetsBtnAriaText}"]`);
         if (HeaderControls)
         {
             ManageGroupsBtn = document.createElement("div");

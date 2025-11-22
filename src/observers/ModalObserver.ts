@@ -1,5 +1,6 @@
 import SnippetGroupsPlugin from "main";
 import { AppearanceHookManager } from "managers/AppearanceHookManager";
+import { LocalisationManager } from "managers/LocalisationManager";
 
 /*
  * Looks for the Settings Modal opening, as well as the interaction with the Appearance tab button,
@@ -35,9 +36,10 @@ export class ModalObserver {
                             this.watchAppearanceButton();
                             watchingAppearance = true;
                         }
-                        
+
+                        const localised = LocalisationManager.get("setting.appearance.name");
                         const appearanceMenu = Array.from(document.querySelectorAll(".vertical-tab-nav-item"))
-                                                        .find(e => e.textContent == "Appearance");
+                                                        .find(e => e.textContent == localised);
                         if (appearanceMenu)
                         {
                             AppearanceHookManager.RedrawAppearanceMenu(this.plugin);
@@ -51,8 +53,9 @@ export class ModalObserver {
 
     watchAppearanceButton()
     {
+        const localised = LocalisationManager.get("setting.appearance.name");
         const AppearanceButton = Array.from(document.querySelectorAll(".vertical-tab-nav-item"))
-                                        .find(e => e.textContent == "Appearance") as HTMLElement;
+                                        .find(e => e.textContent == localised) as HTMLElement;
         if (AppearanceButton)
         {
             if (!AppearanceButton.onclick)

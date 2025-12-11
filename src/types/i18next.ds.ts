@@ -1,7 +1,7 @@
 declare global {
     export interface i18next {
-        t(...args: unknown[]): void;
-        addResourceBundle(...args: unknown[]): void;
+        t(...args: unknown[]): string;
+        addResourceBundle(...args: unknown[]): unknown;
     }
 
     export interface Window {

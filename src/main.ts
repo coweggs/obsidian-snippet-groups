@@ -12,7 +12,6 @@ export default class SnippetGroupsPlugin extends Plugin {
 		await this.loadSettings();
 
         LocalisationManager.init();
-        console.log(LocalisationManager.i18next);
 
         this.modalObserver = new ModalObserver();
         this.modalObserver.init(this);

@@ -2,6 +2,7 @@ import en from "locales/en.json";
 import ru from "locales/ru.json";
 
 export class LocalisationManager {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static i18next: any;
 
     static init()
@@ -16,6 +17,7 @@ export class LocalisationManager {
 
     static setRef()
     {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.i18next = (window as any).i18next;
     }
 

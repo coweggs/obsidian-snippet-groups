@@ -1,7 +1,9 @@
 <div align=center>
   <img width="250" height="250" alt="Snippet Groups Logo(1)" src="https://github.com/user-attachments/assets/5bd63119-eeca-45c8-a6f8-92293211adc4" />
   <br>
-  Obsidian Snippet Groups provides tools to let you group your css snippets into categories (and a search bar).
+  Obsidian Snippet Groups hooks into the native obsidian settings appearance menu, letting you group your css snippets into categories (and a search bar).
+  <br>
+  <img src="https://img.shields.io/github/downloads/coweggs/obsidian-snippet-groups/total?style=plastic">
 </div>
 
 # Preview
@@ -17,3 +19,16 @@
 
 # Known Issues:
 - Using [Obsidian Settings Search](https://github.com/javalent/settings-search) with a delay on [Lazy Plugin Loader](https://github.com/alangrainger/obsidian-lazy-plugins) causes settings modal to refresh, removing the plugin's effects. Simply reopnening the appearance tab fixes this.
+
+# Supported Languages:
+| Language | Status |
+| --- | --- |
+| English (en) | ✅ |
+| Русский (ru) | ✅ |
+
+### Want to help translate?
+1. Fork the repo
+2. Navigate to src/locales
+3. Create a file, named `<language_code>.json` (Use [Obsidian's Translation Repo](https://github.com/obsidianmd/obsidian-translations) to find language codes.)
+4. Copy over the format from `en.json`, and edit the values (dont touch `{{- snippet}` or anything similar)
+5. Submit a pull request
